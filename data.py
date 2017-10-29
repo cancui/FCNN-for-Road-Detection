@@ -1,27 +1,7 @@
 import numpy as np 
 import scipy as sp 
-import matplotlib.pyplot as plt
 from scipy.ndimage import imread
-import glob
-
-# def read_train_images_and_labels():
-#     images, labels = [], []
-
-#     for image_path in glob.glob("road_data/training/image_2/*.png"):
-#         image = imread(image_path)
-#         images.append(image)
-
-#     for image_path in glob.glob("road_data/training/gt_image_2/*.png"):
-#         if 'lane' in image_path:
-#             continue
-
-#         image = imread(image_path)
-#         labels.append(image)
-
-#     assert(len(images) == len(labels))
-#     print('Read {} training images'.format(len(images)))
-
-#     return images, labels
+import glob, os.path
 
 ''' Convert label image into a matrix of 2-member onehot vectors. Red is not road, green is road '''
 def image_to_label(image):
@@ -38,9 +18,8 @@ def label_to_image(label):
 
 # smallest height:370 smallest width:1226
 def trimmer(image):
-    # print(image.shape)
-    image = image[-370:,-1226:,:]
-    # print(image.shape)
+    # image = image[-370:,-1226:,:] #crop for largest possible
+    image = image[-288:,-1152:,:] #9*32, 9*128
     return image
 
 def find_min(images):
@@ -57,16 +36,25 @@ def find_min(images):
     print('Smallest height:{} smallest width:{}'.format(smallest_height, smallest_width))
 
 def get_label_path(image_path):
-    path_parts = image_path.split('_')
-    del(path_parts[1])
-    label_path = '{}_data/training/gt_image_{}_road_{}'.format(*path_parts)
+    if os.path.isfile('visualize.py'): 
+        path_parts = image_path.split('_')
+        del(path_parts[1])
+        label_path = '{}_data/training/gt_image_{}_road_{}'.format(*path_parts)
+    else:
+        path_parts = image_path.split('_')
+        del(path_parts[0])
+        label_path = 'gt_image_{}_road_{}'.format(*path_parts)
+
     return label_path
 
 def read_train_images_and_labels():
     images, labels = [], []
     label_paths = []
 
-    for image_path in glob.glob("road_data/training/image_2/*.png"):
+    if os.path.isfile('visualize.py'): path = "road_data/training/image_2/"
+    else: path = "image_2/"
+
+    for image_path in glob.glob(path+"*.png"):
         image = imread(image_path)
         image = trimmer(image)
         images.append(image)
