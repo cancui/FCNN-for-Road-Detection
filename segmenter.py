@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 def fully_conv_net(learing_rate=0.001):
     model = Sequential(layers=[
         Conv2D(8, (7,7), strides=(1,1), padding='same', activation='relu', input_shape=(None, None, 3)),
-        Conv2D(8, (7,7), strides=(1,1), padding='same', activation='relu'),
-        Conv2D(3, (3,3), strides=(1,1), padding='same', activation='relu'),
+        Conv2D(8, (3,3), strides=(1,1), padding='same', activation='relu'),
+        Conv2D(3, (1,1), strides=(1,1), padding='same', activation='relu'),
     ])
 
-    model.compile(optimizer=optimizers.Adam(), loss='categorical_crossentropy', metrics=[])
-
+    # model.compile(optimizer=optimizers.Adam(), loss='mse', metrics=[])
+    model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy', metrics=[])
+    #categorical_crossentropy
     return model
 
 class Segmenter(object):
@@ -23,7 +24,7 @@ class Segmenter(object):
         self.model = fully_conv_net(learing_rate=learing_rate)
 
     def train(self, features, labels):
-        self.model.fit(features, labels)
+        self.model.fit(features, labels, batch_size=1, epochs=15)
 
     def infer(self, features):
         return
