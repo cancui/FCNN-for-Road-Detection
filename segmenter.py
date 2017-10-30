@@ -1,20 +1,43 @@
+import numpy as np
+import scipy as sp
 from keras.utils import plot_model
 from keras.applications.vgg16 import VGG16
+from keras.applications.inception_v3 import InceptionV3
+from keras.applications.xception import Xception
 from keras.models import Sequential, Model, load_model
 from keras.layers import Input, Dropout, Add, BatchNormalization
 from keras.layers.convolutional import Conv2D, MaxPooling2D, UpSampling2D, Conv2DTranspose
 from keras import optimizers
 
-import numpy as np
-import scipy as sp
-
 import time
 
-def fully_conv_vgg16():
+import data
+import metrics as met
+
+def fully_conv_InceptionV3():
     input_shape = (None, None, 3)
     input_image = Input(shape=input_shape)
-    vgg16 = VGG16(include_top=False, weights='imagenet', input_tensor=input_image, input_shape=input_shape)
 
+    # 21,802,784 parameters on its own 
+    inception = InceptionV3(include_top=True, weights='imagenet', input_tensor=input_image, input_shape=input_shape)
+
+    # 20,861,480 parameters on its own
+    # xception = Xception(include_top=False, weights='imagenet', input_tensor=input_image, input_shape=input_shape)
+    # print(xception.summary())
+
+    for layer in inception.layers:
+        layer.trainable = False
+
+    # plot_model(inception, 'inception_v3.png')
+    print(inception.summary())
+
+def fully_conv_VGG16():
+    input_shape = (None, None, 3)
+    input_image = Input(shape=input_shape)
+
+    # 14,714,688 parameters on its own
+    vgg16 = VGG16(include_top=False, weights='imagenet', input_tensor=input_image, input_shape=input_shape)
+    
     for layer in vgg16.layers:
         layer.trainable = False
 
@@ -70,10 +93,10 @@ def fully_conv_net():
 
 class Segmenter(object):
     def __init__(self):
-        self.model = fully_conv_vgg16()
+        self.model = fully_conv_VGG16()
 
     def train(self, features, labels):
-        self.model.fit(features, labels, batch_size=1, epochs=15)
+        self.model.fit(features, labels, batch_size=1, epochs=1)
 
         save_path = 'saved_models/'+ time.strftime("%m-%dth_%H:%M:%S") +'.h5'
         self.save_model(save_path)
@@ -89,6 +112,22 @@ class Segmenter(object):
 
         return binarized.astype('uint8')
 
+    def test_model(self, test_features, ground_truth):
+        results = self.infer(test_features)
+        results = data.preprocess_for_metrics(results)
+        ground_truth = data.preprocess_for_metrics(ground_truth)
+
+        length = ground_truth.shape[0]
+        p_acc, m_acc, m_IU, fw_IU = 0, 0, 0, 0
+        for i in range(length):
+            p_acc += met.pixel_accuracy(results[i], ground_truth[i])
+            m_acc += met.mean_accuracy(results[i], ground_truth[i])
+            m_IU +=  met.mean_IU(results[i], ground_truth[i])
+            fw_IU += met.frequency_weighted_IU(results[i], ground_truth[i])
+        p_acc, m_acc, m_IU, fw_IU = p_acc/length, m_acc/length, m_IU/length, fw_IU/length
+
+        return p_acc, m_acc, m_IU, fw_IU
+
     def save_model(self, path):
         self.model.save(path)
         print('Saved model to {}'.format(path))
@@ -101,4 +140,6 @@ if __name__ == '__main__':
     print('Running segmenter.py')
     # segmenter = Segmenter()
 
-    plot_model(fully_conv_vgg16(), 'vgg16_mod.png')
+    # plot_model(fully_conv_VGG16(), 'vgg16_mod.png')
+
+    fully_conv_InceptionV3()

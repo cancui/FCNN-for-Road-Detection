@@ -17,7 +17,7 @@ def label_to_image(label):
     image *= 255
     return image.astype('uint8')
 
-# smallest height:370 smallest width:1226
+''' Trim an image or label to a specific size '''
 def trimmer(image, max=False):
     if max:
         image = image[-370:,-1226:,:] #crop for largest possible
@@ -25,6 +25,16 @@ def trimmer(image, max=False):
         # image = image[-288:,-1152:,:] #9*32, 9*128
         image = image[-320:,-1216:,:] #64*5, 64*19
     return image
+
+def preprocess_for_metrics(predicted):
+    # base = np.zeros((*predicted.shape[:-1], 1))
+    
+
+    # base[np.where(predicted[:,:,:,0] == 1)] = 0
+    # base[np.where(predicted[:,:,:,1] == 1)] = 1
+
+    # return np.delete(predicted, 1, axis=3)
+    return predicted[:,:,:,0]
 
 def find_min(images):
     smallest_height = 10000

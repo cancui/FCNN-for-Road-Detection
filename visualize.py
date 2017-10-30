@@ -24,7 +24,7 @@ def visualise_results(results, originals, randomise=True, num=None):
     for i, (result, original) in enumerate(zip(results, originals)):
         result = data.label_to_image(result)
 
-        f, ax = plt.subplots(nrows=1, ncols=3)
+        f, ax = plt.subplots(nrows=3, ncols=1)
         ax[0].imshow(original)
         ax[1].imshow(highlight_image(original, result))
         ax[2].imshow(result)
