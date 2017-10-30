@@ -1,12 +1,12 @@
 import numpy as np 
 import scipy as sp 
 from scipy.ndimage import imread
-import glob, os.path
+import glob, os.path, random
 
 ''' Convert label image into a matrix of 2-member onehot vectors. Red is not road, green is road '''
 def image_to_label(image):
-    image[:,:,0] = 255
-    image[np.where(image[:,:,2] == 255)] = np.asarray([0, 255, 0])
+    image[:,:,0] = 1
+    image[np.where(image[:,:,2] == 255)] = np.asarray([0, 1, 0])
     image = np.delete(image, 2, axis=2)
     return image
 
@@ -14,12 +14,16 @@ def image_to_label(image):
 def label_to_image(label):
     added = np.full((*label.shape[0:2], 1), 0)
     image = np.concatenate((label, added), axis=2)
+    image *= 255
     return image.astype('uint8')
 
 # smallest height:370 smallest width:1226
-def trimmer(image):
-    # image = image[-370:,-1226:,:] #crop for largest possible
-    image = image[-288:,-1152:,:] #9*32, 9*128
+def trimmer(image, max=False):
+    if max:
+        image = image[-370:,-1226:,:] #crop for largest possible
+    else:
+        # image = image[-288:,-1152:,:] #9*32, 9*128
+        image = image[-320:,-1216:,:] #64*5, 64*19
     return image
 
 def find_min(images):
@@ -79,9 +83,13 @@ def read_train_images_and_labels():
 
     return images, labels
 
-def read_test_images():
-    images = [imread(image_path) for image_path in glob.glob("road_data/testing/image_2/*.png")]
+def read_test_images(randomise=True):
+    images = [trimmer(imread(image_path), max=False) for image_path in glob.glob("road_data/testing/image_2/*.png")]
+
+    if randomise: random.shuffle(images)
+
     print('Read {} testing images'.format(len(images)))
+    images = np.asarray(images)
     return images
 
 if __name__ == '__main__':
