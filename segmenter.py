@@ -16,85 +16,6 @@ import time
 import data
 import metrics as met
 
-# def met_pixel_acc(ground_truth, results):
-#     results = data.preprocess_for_metrics(results)
-#     ground_truth = data.preprocess_for_metrics(ground_truth)
-
-#     length = ground_truth.shape[0]
-#     p_acc, m_acc, m_IU, fw_IU = 0, 0, 0, 0
-#     for i in range(length):
-#         p_acc += met.pixel_accuracy(results[i], ground_truth[i])
-#         m_acc += met.mean_accuracy(results[i], ground_truth[i])
-#         m_IU +=  met.mean_IU(results[i], ground_truth[i])
-#         fw_IU += met.frequency_weighted_IU(results[i], ground_truth[i])
-#     p_acc, m_acc, m_IU, fw_IU = p_acc/length, m_acc/length, m_IU/length, fw_IU/length
-
-#     return p_acc, m_acc, m_IU, fw_IU
-
-def met_pixel_acc(ground_truth, results):
-    results = data.preprocess_for_metrics(results)
-    ground_truth = data.preprocess_for_metrics(ground_truth)
-    length = ground_truth.shape[0]
-    p_acc = 0
-    for i in range(length):
-        p_acc += met.pixel_accuracy(results[i], ground_truth[i])
-    p_acc = p_acc/length
-
-    return p_acc
-
-def met_mean_acc(ground_truth, results):
-    results = data.preprocess_for_metrics(results)
-    ground_truth = data.preprocess_for_metrics(ground_truth)
-
-    length = ground_truth.shape[0]
-    m_acc = 0
-    for i in range(length):
-        m_acc += met.mean_accuracy(results[i], ground_truth[i])
-    m_acc = m_acc/length
-
-    return m_acc
-
-def met_mean_IU(ground_truth, results):
-    results = data.preprocess_for_metrics(results)
-    ground_truth = data.preprocess_for_metrics(ground_truth)
-
-    length = ground_truth.shape[0]
-    m_IU = 0
-    for i in range(length):
-        m_IU += met.mean_IU(results[i], ground_truth[i])
-    m_IU = m_IU/length
-
-    return m_IU
-
-def met_freq_w_IU(ground_truth, results):
-    results = data.preprocess_for_metrics(results)
-    ground_truth = data.preprocess_for_metrics(ground_truth)
-
-    length = ground_truth.shape[0]
-    fw_IU = 0
-    for i in range(length):
-        fw_IU += met.frequency_weighted_IU(results[i], ground_truth[i])
-    fw_IU = fw_IU/length
-
-    return fw_IU
-
-def fully_conv_InceptionV3():
-    input_shape = (None, None, 3)
-    input_image = Input(shape=input_shape)
-
-    # 21,802,784 parameters on its own 
-    inception = InceptionV3(include_top=True, weights='imagenet', input_tensor=input_image, input_shape=input_shape)
-
-    # 20,861,480 parameters on its own
-    # xception = Xception(include_top=False, weights='imagenet', input_tensor=input_image, input_shape=input_shape)
-    # print(xception.summary())
-
-    for layer in inception.layers:
-        layer.trainable = False
-
-    # plot_model(inception, 'inception_v3.png')
-    print(inception.summary())
-
 def fully_conv_VGG16(metrics=None):
     input_shape = (None, None, 3)
     input_image = Input(shape=input_shape)
@@ -128,36 +49,9 @@ def fully_conv_VGG16(metrics=None):
 
     return model
 
-def fully_conv_net():
-    
-    # model = Sequential(layers=[
-    #     Conv2D(8, (7,7), strides=(1,1), padding='same', activation='relu', input_shape=(None, None, 3)),
-    #     Conv2D(8, (5,5), strides=(1,1), padding='same', activation='relu'),
-    #     Conv2D(2, (3,3), strides=(1,1), padding='same', activation='relu'),
-    # ])
-
-    model = Sequential(layers=[
-        Conv2D(16, (7,7), strides=(2,2), padding='same', activation='relu', input_shape=(None, None, 3)),
-        # MaxPooling2D(pool_size=(2, 2)),
-        Conv2D(32, (7,7), strides=(2,2), padding='same', activation='relu'),
-        # MaxPooling2D(pool_size=(3, 3)),
-        Conv2D(64, (5,5), strides=(1,1), padding='same', activation='relu'),
-        MaxPooling2D(pool_size=(3, 3)),
-        Conv2D(128, (5,5), strides=(1,1), padding='same', activation='relu'),
-        MaxPooling2D(pool_size=(3, 3)),
-
-        # Conv2D(2, (1,1), strides=(1,1), padding='same', activation='relu'),
-        Conv2DTranspose(2, (9*4*2, 9*4*2), strides=(9*4, 9*4), padding='same')
-    ])
-
-    # model.compile(optimizer=optimizers.Adam(), loss='mse', metrics=[])
-    model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy', metrics=[])
-
-    return model
-
 class Segmenter(object):
     def __init__(self, save_name=''):
-        self.metrics = [keras.metrics.binary_accuracy] #, met_pixel_acc, met_mean_acc, met_mean_IU, met_freq_w_IU]
+        self.metrics = [keras.metrics.binary_accuracy]
         self.model = fully_conv_VGG16(self.metrics)
         self.save_name = save_name
 
@@ -217,5 +111,3 @@ if __name__ == '__main__':
     # segmenter = Segmenter()
 
     # plot_model(fully_conv_VGG16(), 'vgg16_mod.png')
-
-    fully_conv_InceptionV3()

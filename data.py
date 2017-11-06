@@ -26,14 +26,8 @@ def trimmer(image, max=False):
         image = image[-320:,-1216:,:] #64*5, 64*19
     return image
 
+''' Convert predictions/labels from one hot to indices '''
 def preprocess_for_metrics(predicted):
-    # base = np.zeros((*predicted.shape[:-1], 1))
-    
-
-    # base[np.where(predicted[:,:,:,0] == 1)] = 0
-    # base[np.where(predicted[:,:,:,1] == 1)] = 1
-
-    # return np.delete(predicted, 1, axis=3)
     return predicted[:,:,:,0]
 
 def find_min(images):
@@ -80,16 +74,11 @@ def read_train_images_and_labels():
         label = trimmer(label)
         labels.append(label)
 
-        # print(image.shape, label.shape)
-
     assert(len(images) == len(labels))
     print('Read {} training images'.format(len(images)))
 
     images, labels = np.asarray(images), np.asarray(labels)
     print(images.shape, labels.shape)
-
-    # print(labels[0])
-    # exit()
 
     return images, labels
 
